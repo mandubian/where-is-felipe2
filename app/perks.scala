@@ -12,9 +12,8 @@ import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import org.apache.commons.lang.StringUtils
 import play.api.libs.json._
-import play
-
 import play.api.Play.current
+import scala.collection.mutable.ListBuffer
 
 /**
  * Helper Object
@@ -26,7 +25,7 @@ object please {
     /**
      * JSON Formats
      */
-    implicit val formats = PlayParameterReader.Formats.formats
+    //implicit val formats = PlayParameterReader.Formats.formats
 
     /**
      * Compress
@@ -72,7 +71,7 @@ object please {
      */
     def encode(value: String) = URLEncoder.encode(value, conf("encoding"))
 
-    import dtos.MapCluster
+    import _root_.dtos._
     implicit object MapClusterFormat extends Format[MapCluster] {
     	def reads(json: JsValue): MapCluster = MapCluster(
     			(json \ "geohash").as[String],
@@ -87,25 +86,69 @@ object please {
 				"longitude" -> JsNumber(BigDecimal(mc.longitude))))
     }
     
+    implicit object MapMarkerFormat extends Format[MapMarker] {
+    	def reads(json: JsValue): MapMarker = MapMarker(
+    			(json \ "id").as[String],
+    			(json \ "latitude").as[Double],
+    			(json \ "longitude").as[Double],
+    			(json \ "address").asOpt[String],
+    			(json \ "city").asOpt[String],
+    			(json \ "state").asOpt[String],
+    			(json \ "zip").asOpt[String],
+    			(json \ "county").asOpt[String]
+    	)
+    			
+		def writes(mc: MapMarker): JsValue = {
+    			val lb = new ListBuffer[(String, JsValue)]
+    			lb ++= List(
+    			    "id" -> JsString(mc.id),
+    			    "latitude" -> JsNumber(BigDecimal(mc.latitude)),
+					"longitude" -> JsNumber(BigDecimal(mc.longitude)))
+				if(mc.address.isDefined) lb += "address" -> JsString(mc.address.get)	
+				if(mc.city.isDefined) lb += "city" -> JsString(mc.city.get)	
+				if(mc.state.isDefined) lb += "state" -> JsString(mc.state.get)	
+				if(mc.zip.isDefined) lb += "zip" -> JsString(mc.county.get)	
+				if(mc.county.isDefined) lb += "county" -> JsString(mc.county.get)	
+
+				JsObject(lb)
+    	}
+    }
+    
+    implicit object MapOverlayFormat extends Format[MapOverlay] {
+      def reads(json: JsValue): MapOverlay = MapOverlay(
+          (json \ "markers").as[List[MapMarker]],
+          (json \ "clusters").as[List[MapCluster]]
+      )    
+      
+      def writes(m: MapOverlay): JsValue = {
+    	  JsObject(List(
+    			  "markers" -> toJson(m.markers),
+    			  "clusters" -> toJson(m.clusters)
+    	  ))
+      }
+
+    }
+
     /**
      * Automatically generate a standard perks json response.
      */
-    def jsonify(runnable: => Any) = {
-        _dummy.Json(pretty(render(decompose(
-            try {
-                val data = runnable match {
-                    // Lift-json has a cow if you pass it a mutable map to render.
-                    case mmapResult: Map[Any, Any] => mmapResult.toMap
-                    case result => result
-                }
-                Map("status" -> 200, "data" -> data)
-            } catch {
-                case error: Throwable =>
-                    please report error
-                    Map("status" -> 409, "errors" -> Map(error.hashCode.toString -> error.getMessage))
-            }
-        ))))
-    }
+//    def jsonify(runnable: => Any):JsValue = {
+//        _dummy.Json(pretty(render(decompose(
+//            try {
+//                val data = runnable match {
+//                    // Lift-json has a cow if you pass it a mutable map to render.
+//                    case mmapResult: Map[Any, Any] => mmapResult.toMap
+//                    case result => result
+//                }
+//                Map("status" -> 200, "data" -> data)
+//            } catch {
+//                case error: Throwable =>
+//                    please report error
+//                    Map("status" -> 409, "errors" -> Map(error.hashCode.toString -> error.getMessage))
+//            }
+//        ))))
+//    	
+//    }
 
     /**
      * Option[Date] to Pimp Date Implicit Conversion

@@ -1,7 +1,6 @@
 package models
 
 import dtos._
-import play.data.validation.Annotations._
 import org.apache.commons.lang.builder.ToStringBuilder
 import play.mvc.Controller
 import scala.collection.mutable.ListBuffer
@@ -10,21 +9,20 @@ import java.lang.StringBuffer
 import pretty.please
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
-import play.db.anorm._
-import play.db.anorm.defaults._
-import play.db.anorm
-import play.db.anorm.SqlParser._
+import anorm._
+import anorm.defaults._
+import anorm.SqlParser._
 import org.apache.commons.lang.StringUtils
-import play.data.validation.Required
 import play.Logger
-import net.liftweb.json.JsonAST
-import net.liftweb.json.JsonDSL._
-import play.db.anorm.Id
 import pretty.please._
 import _root_.pretty.Clockman
 import filters._
 import java.util.{ Date }
 import java.sql.{ Timestamp, ResultSet }
+
+import play.api.db._
+import play.api.Play.current
+
 
 /**
  * To String Trait
@@ -55,14 +53,14 @@ trait Entity extends ToString
  */
 case class Site(
         var id: Pk[Long],
-        @Required var name: Option[String],
-        @Required var address: Option[String],
-        @Required var city: Option[String],
-        @Required var state: Option[String],
-        @Required var zipcode: Option[String],
-        @Required var county: Option[String],
-        @Required var latitude: Option[Double],
-        @Required var longitude: Option[Double]) extends Entity {
+        var name: Option[String],
+        var address: Option[String],
+        var city: Option[String],
+        var state: Option[String],
+        var zipcode: Option[String],
+        var county: Option[String],
+        var latitude: Option[Double],
+        var longitude: Option[Double]) extends Entity {
 
     /**
      * Constructor
@@ -83,7 +81,9 @@ object Site extends Magic[Site] {
     /**
      * Count
      */
-    def count(implicit filters: SearchFilters): Long = statement("select count(1) as count from Site").as(scalar[Long])
+    def count(implicit filters: SearchFilters): Long = DB.withConnection { implicit connection => 
+      statement("select count(1) as count from Site").as(scalar[Long])
+    }
 
     /**
      * Map Overlay
@@ -108,26 +108,27 @@ object Site extends Magic[Site] {
         val query = statement("select " + geohashExpression + " as geohash, count(1) as count from Site", "group by " + geohashExpression + " order by count desc")
 
         // Get Results
-        val list: List[MapCluster] = query().filter(_.data(0) != null).map {
-            row =>
-                {
-                    // Get Fields
-                    val fields = row.data
-
-                    // Geohash
-                    Option(fields(0)) match {
-                        case Some(geohash: String) => {
-                            // Count
-                            val count: Long = fields(1).toString.toLong
-
-                            // Map Cluster
-                            MapCluster(geohash, count)
-                        }
-                        case _ => null
-                    }
-                }
-        } toList
-
+        val list: List[MapCluster] = DB.withConnection { implicit connection =>
+          	query().filter(_.data(0) != null).map {        
+	            row =>
+	                {
+	                    // Get Fields
+	                    val fields = row.data
+	
+	                    // Geohash
+	                    Option(fields(0)) match {
+	                        case Some(geohash: String) => {
+	                            // Count
+	                            val count: Long = fields(1).toString.toLong
+	
+	                            // Map Cluster
+	                            MapCluster(geohash, count)
+	                        }
+	                        case _ => null
+	                    }
+	                }
+	        } toList
+        }
         // Log Debug
         please log "Map Clusters: " + list.size
 
@@ -143,7 +144,8 @@ object Site extends Magic[Site] {
         val query = statement("select site.* from Site site", "order by id")
 
         // Get Results
-        val list: List[MapMarker] = query().map {
+        val list: List[MapMarker] = DB.withConnection { implicit connection =>
+          query().map {        
             row =>
                 try {
                     // Id
@@ -160,7 +162,7 @@ object Site extends Magic[Site] {
 
                     // Map Marker (coord required)
                     (latitude, longitude) match {
-                        case (lat: Some[Double], lng: Some[Double]) => new MapMarker(id, lat.get, lng.get, address, city, state, zip, county)
+                        case (Some(lat: Double), Some(lng: Double)) => new MapMarker(id, lat, lng, address, city, state, zip, county)
                         case _ => null
                     }
 
@@ -170,7 +172,8 @@ object Site extends Magic[Site] {
                         null
                     }
                 }
-        } toList
+          } toList
+        }
 
         // Log Debug
         please log "Map Markers: " + list.size
