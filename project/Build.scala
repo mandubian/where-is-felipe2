@@ -16,7 +16,12 @@ object ApplicationBuild extends Build {
     )
 
     val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
-      // Add your own project settings here      
+      // Add your own project settings here
+        
+        resolvers ++= Seq(
+        		Resolver.url("Play@mandubian", url("http://ci.mandubian.com/ivy-releases/"))(Resolver.ivyStylePatterns)
+		)
+		
     )
 
 }
