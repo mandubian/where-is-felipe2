@@ -10,7 +10,7 @@ import pretty.please
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
 import anorm._
-import anorm.defaults._
+import anorm._
 import anorm.SqlParser._
 import org.apache.commons.lang.StringUtils
 import play.Logger
@@ -76,13 +76,13 @@ case class Site(
  *
  * @author Felipe Oliveira [@_felipera]
  */
-object Site extends Magic[Site] {
+object Site /*extends Magic[Site]*/ {
 
     /**
      * Count
      */
     def count(implicit filters: SearchFilters): Long = DB.withConnection { implicit connection => 
-      statement("select count(1) as count from Site").as(scalar[Long])
+      statement("select count(1) as count from Site").as(scalar[Long].single)
     }
 
     /**
