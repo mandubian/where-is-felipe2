@@ -12,7 +12,6 @@ import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import org.apache.commons.lang.StringUtils
 import play.api.libs.json._
-import play.api.Play.current
 import scala.collection.mutable.ListBuffer
 
 /**
