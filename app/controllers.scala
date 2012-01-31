@@ -83,6 +83,7 @@ object Application extends Controller with controllers.Filters {
  */
 object Geo extends Controller with controllers.Filters {
 	import play.api.libs.json._
+	import play.api.libs.json.Json._
     /**
      * Map Overlay
      */
