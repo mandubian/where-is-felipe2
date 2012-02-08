@@ -19,7 +19,8 @@ object ApplicationBuild extends Build {
       // Add your own project settings here
         
         resolvers ++= Seq(
-        		Resolver.url("Play@mandubian", url("http://ci.mandubian.com/ivy-releases/"))(Resolver.ivyStylePatterns)
+        		//Resolver.url("Play@mandubian", url("http://ci.mandubian.com/ivy-releases/"))(Resolver.ivyStylePatterns)
+			Resolver.url("Typesafe-Snapshots", url("http://repo.typesafe.com/typesafe/ivy-snapshots/"))(Resolver.ivyStylePatterns)
 		)
 		
     )
