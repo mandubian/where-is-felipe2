@@ -130,26 +130,7 @@ object please {
 
     }
 
-    /**
-     * Automatically generate a standard perks json response.
-     */
-//    def jsonify(runnable: => Any):JsValue = {
-//        _dummy.Json(pretty(render(decompose(
-//            try {
-//                val data = runnable match {
-//                    // Lift-json has a cow if you pass it a mutable map to render.
-//                    case mmapResult: Map[Any, Any] => mmapResult.toMap
-//                    case result => result
-//                }
-//                Map("status" -> 200, "data" -> data)
-//            } catch {
-//                case error: Throwable =>
-//                    please report error
-//                    Map("status" -> 409, "errors" -> Map(error.hashCode.toString -> error.getMessage))
-//            }
-//        ))))
-//    	
-//    }
+
 
     /**
      * Option[Date] to Pimp Date Implicit Conversion
