@@ -19,7 +19,7 @@ object ApplicationBuild extends Build {
       // Add your own project settings here
         
         resolvers ++= Seq(
-			Resolver.url("Typesafe-Snapshots", url("http://repo.typesafe.com/typesafe/ivy-snapshots/"))(Resolver.ivyStylePatterns)
+			Resolver.url("Typesafe-Releases", url("http://repo.typesafe.com/typesafe/ivy-releases/"))(Resolver.ivyStylePatterns)
 		)
 		
     )
